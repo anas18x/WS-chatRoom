@@ -1,8 +1,17 @@
-import './App.css'
+// import './App.css'
+import { Routes , Route} from 'react-router-dom'
+import { Home } from './pages/Home'
+import { ChatRoom } from './pages/ChatRoom'
 
 function App() {
   return (
-    <div className="h-screen bg-black">
+    <div className= "min-h-screen bg-zinc-900 text-zinc-200 flex items-center justify-center">
+      <Routes>
+
+        <Route path='/' element={<Home/>}/>
+        <Route path='/room/:roomId' element={<ChatRoom/>}/>
+
+      </Routes>
      
     </div>
   )
