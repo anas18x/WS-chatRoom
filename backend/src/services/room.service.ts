@@ -1,5 +1,6 @@
 import WebSocket from "ws";
 import { nanoid } from "nanoid";
+import { broadcastToRoom } from "../utils/boadcastToRoom.js";
 
 
 export const createNewRoom = (
@@ -38,6 +39,9 @@ export const joinRoom = (
             name : payload.Username,
         })
         socket.send(JSON.stringify({ type: "room-joined", payload: { roomId: payload.roomId } }));
+
+       
+        broadcastToRoom(payload.roomId, { type: "user-joined", payload: { name: payload.Username } }, socketsInfo, socket);
 }
 
 
@@ -49,14 +53,7 @@ export const sendMessage = (
         const senderInfo = socketsInfo.get(socket);
         if(!senderInfo) return;
 
-        socketsInfo.forEach((socketKey, clientSocket)=>{
-            if(socketKey.roomId === payload.roomId && clientSocket.readyState === WebSocket.OPEN){
-                clientSocket.send(JSON.stringify({ type: "chat", payload: {
-                    message : payload.message,
-                    sender : senderInfo.name,
-                }}))
-            }
-        })
+        broadcastToRoom(payload.roomId, { type: "chat", payload: { message: payload.message, name: senderInfo.name } }, socketsInfo);
 }
 
 
@@ -66,5 +63,7 @@ export const leaveRoom = (socket: WebSocket, socketsInfo: Map<WebSocket, {roomId
     if(!userInfo) return;
 
     socketsInfo.delete(socket);
+    broadcastToRoom(userInfo.roomId, { type: "user-left", payload: { name: userInfo.name } }, socketsInfo);
+
     console.log(`${userInfo.name} left the room ${userInfo.roomId}`);  
 }
