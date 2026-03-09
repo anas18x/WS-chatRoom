@@ -1,18 +1,30 @@
 import { IoChatboxEllipses } from "react-icons/io5";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createRoom } from "../services/room.service";
+import { useEffect } from "react";
+import { socket } from "../services/socket.service";
 
 export const Home = () => {
 
   const [name, setName] = useState("");
-  const [roomCode, setRoomCode] = useState("");
-  const [createdRoomId, setCreatedRoomId] = useState<string | null>(null);
+  const [roomId, setRoomId] = useState("");
+  const [createdRoomId, setCreatedRoomId] = useState<string | null >(null);
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === "room-created") {
+        setCreatedRoomId(data.payload.roomId);
+      } 
+    }
+  }, [])
+
 
   return (
-    <div className="w-full max-w-lg bg-zinc-900 p-4 rounded-2xl border border-zinc-900">
+    <div className="w-full max-w-lg bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
 
 
       <h1 className="flex items-center gap-2 text-2xl font-semibold mb-2">
@@ -30,7 +42,7 @@ export const Home = () => {
 
         <div className="space-y-4">
 
-          <p className="text-zinc-300">
+          <p className="text-white text-center">
             Share this code with your friend
           </p>
 
@@ -64,9 +76,8 @@ export const Home = () => {
 
 
           <button
-            disabled={!name.trim()}
-            className="w-full mb-4 py-2 rounded-lg bg-white text-black font-medium disabled:opacity-50 cursor-pointer"
-
+            onClick={() => createRoom(name)}
+            className="w-full mb-4 py-2 rounded-lg bg-white text-black font-medium cursor-pointer"
           >
             Create New Room
           </button>
@@ -76,15 +87,15 @@ export const Home = () => {
 
             <input
               type="text"
-              placeholder="Enter Room Code"
+              placeholder="Enter Room ID"
               className="flex-1 px-4 py-2 rounded-lg bg-zinc-900 border border-zinc-700 outline-none "
-              value={roomCode}
-              onChange={(e) => setRoomCode(e.target.value)}
+              value={roomId}
+              onChange={(e) => setRoomId(e.target.value)}
             />
 
             <button
-              onClick={() => navigate(`/room/${roomCode}`)}
-              className="px-4 py-2 rounded-lg bg-zinc-100 cursor-pointer font-medium text-black"
+              onClick={() => navigate(`/room/${roomId}`)}
+              className="px-4 py-2 rounded-lg bg-white cursor-pointer font-medium text-black "
             >
               Join
             </button>

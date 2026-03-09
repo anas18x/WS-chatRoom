@@ -5,7 +5,7 @@ import { ChatRoom } from './pages/ChatRoom'
 
 function App() {
   return (
-    <div className= "min-h-screen bg-zinc-900 text-zinc-200 flex items-center justify-center">
+    <div className= "min-h-screen bg-zinc-900 text-white flex items-center justify-center">
       <Routes>
 
         <Route path='/' element={<Home/>}/>
