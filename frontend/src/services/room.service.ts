@@ -2,8 +2,6 @@ import {socket} from "./socket.service"
 
 export const createRoom = (username : string) => {
 
-    console.log("called createRoom with username:", username);
-
     if(!username.trim()) {
         alert("Username is required to create a room");
         return;
@@ -16,3 +14,22 @@ export const createRoom = (username : string) => {
         }
     }))  
 }  
+
+
+export const joinRoom = (username: string, roomId: string) => {
+
+  if (!roomId.trim()) {
+    alert("Enter room ID");
+    return;
+  }
+
+  socket.send( JSON.stringify({
+      type: "join-room",
+      payload: {
+        Username: username,
+        roomId: roomId
+      }
+    })
+  );
+
+};

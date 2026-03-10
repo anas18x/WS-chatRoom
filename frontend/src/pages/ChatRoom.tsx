@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { socket } from "../services/socket.service";
 
@@ -10,19 +10,15 @@ type Message = {
 
 export const ChatRoom = () => {
 
-  const { roomCode } = useParams();
+  const { roomId } = useParams();
+  const location = useLocation();
+
+  const username = location.state?.name || "User";
 
   const [users, setUsers] = useState(1);
-
   const [messages, setMessages] = useState<Message[]>([]);
-
   const [input, setInput] = useState("");
 
-  const username = "User"; // temporary until we pass name from Home
-
-  /*
-  Join room when component loads
-  */
   useEffect(() => {
 
     socket.send(
@@ -30,16 +26,13 @@ export const ChatRoom = () => {
         type: "join-room",
         payload: {
           Username: username,
-          roomId: roomCode
+          roomId: roomId
         }
       })
     );
 
   }, []);
 
-  /*
-  Listen for messages from backend
-  */
   useEffect(() => {
 
     socket.onmessage = (event) => {
@@ -49,21 +42,26 @@ export const ChatRoom = () => {
       if (data.type === "chat") {
 
         const newMessage: Message = {
-          name: data.payload.sender,
+          name: data.payload.name,
           text: data.payload.message,
-          isSelf: data.payload.sender === username
+          isSelf: data.payload.name === username
         };
 
-        setMessages((prev) => [...prev, newMessage]);
+        setMessages(prev => [...prev, newMessage]);
+      }
+
+      if (data.type === "user-joined") {
+        setUsers(prev => prev + 1);
+      }
+
+      if (data.type === "user-left") {
+        setUsers(prev => prev - 1);
       }
 
     };
 
   }, []);
 
-  /*
-  Send chat message
-  */
   const handleSend = () => {
 
     if (!input.trim()) return;
@@ -72,7 +70,7 @@ export const ChatRoom = () => {
       JSON.stringify({
         type: "chat",
         payload: {
-          roomId: roomCode,
+          roomId: roomId,
           message: input
         }
       })
@@ -84,20 +82,15 @@ export const ChatRoom = () => {
   return (
     <div className="w-full max-w-3xl bg-zinc-900 p-6 rounded-2xl border border-zinc-700 flex flex-col h-[600px]">
 
-      {/* Header */}
-
       <div className="flex items-center justify-between mb-4 border-b border-zinc-700 pb-3">
         <h2 className="text-lg font-semibold">
-          Room Code: {roomCode}
+          Room Code: {roomId}
         </h2>
 
         <h2 className="text-lg font-semibold">
           Participants: {users}
         </h2>
       </div>
-
-
-      {/* Chat Messages */}
 
       <div className="flex-1 overflow-y-auto bg-zinc-900 rounded-lg p-4 space-y-3 mb-4 border border-zinc-700">
 
@@ -110,10 +103,7 @@ export const ChatRoom = () => {
 
             <div
               className={`max-w-[60%] px-4 py-2 rounded-lg
-                ${msg.isSelf
-                  ? "bg-white text-black"
-                  : "bg-zinc-700 text-white"
-                }`}
+              ${msg.isSelf ? "bg-white text-black" : "bg-zinc-700 text-white"}`}
             >
 
               <p className="text-xs opacity-70 mb-1">
@@ -129,9 +119,6 @@ export const ChatRoom = () => {
         ))}
 
       </div>
-
-
-      {/* Input Area */}
 
       <div className="flex gap-2">
 
